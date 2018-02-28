@@ -162,16 +162,6 @@ export function timestamp(time) {
 	return +Date.parse(time).toString().slice(0, 10);
 }
 
-// 获取地图等级
-export function getMapLevel(code) {
-	let idSize = String(+code).length;
-  return code === 'world' ? 1
-        : code === 'china' ? 2
-        : idSize === 2 ? 3
-        : idSize === 4 ? 4
-        : 4;
-}
-
 export function parse2Date(time) {
 	if (time instanceof Date) return time;
 	if (time === undefined) return new Date();
