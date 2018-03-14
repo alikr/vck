@@ -17,8 +17,8 @@
     "start": "rollup -w -c build/rollup.config.js",
     "build:cjs": "node build/build.js cjs",
     "build:min": "node build/build.js iife",
-    "release": "npm run build:cjs && npm run build:min",
-    "publish": "npm run release && npm run test && npm publish",
+    "build": "npm run build:cjs && npm run build:min",
+    "release": "npm run build && npm run test && npm publish",
     "test": "mocha"
   },
   "devDependencies": {
