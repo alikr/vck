@@ -1,6 +1,8 @@
 {
   "presets": [
-    "es2015-rollup"
+    ["env", {
+    	modules: false
+    }]
   ],
   "plugins": [
   	"transform-runtime"

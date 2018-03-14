@@ -1,18 +1,19 @@
 import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
-module.exports={
+module.exports = {
 	input: 'src/index.js',
 	plugins: [
-		babel({
-			exclude: 'node_modules/**'
-		}),
 		resolve(),
 		commonjs(),
+		babel({
+			runtimeHelpers: true,
+			exclude: 'node_modules/**'
+		}),
 	],
 	output: {
 		name:'vck',
-		format: 'cjs',//cjs,amd,es,iife,umd
-		file: 'dist/vck.js'
+		format: 'cjs', // cjs, amd, es, iife, umd
+		file: 'dist/vck.js',
 	}
-}; 
+}

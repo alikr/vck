@@ -1,6 +1,6 @@
 {
   "name": "vck",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Visualization Common Kit",
   "main": "dist/vck.js",
   "author": "alikr",
@@ -14,19 +14,28 @@
     "dist/*.js"
   ],
   "scripts": {
-    "dev": "rollup -w -c rollup.config.js"
+    "start": "rollup -w -c build/rollup.config.js",
+    "build:cjs": "node build/build.js cjs",
+    "build:min": "node build/build.js iife",
+    "release": "npm run build:cjs && npm run build:min",
+    "publish": "npm run release && npm run test && npm publish",
+    "test": "mocha"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015-rollup": "^3.0.0",
+    "babel-preset-env": "^1.6.1",
     "babel-register": "^6.26.0",
     "babel-runtime": "^6.26.0",
+    "chai": "^4.1.2",
+    "mocha": "^5.0.4",
     "rollup": "^0.56.3",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^8.3.0",
-    "rollup-plugin-node-resolve": "^3.0.3"
+    "rollup-plugin-node-resolve": "^3.0.3",
+    "uglify-js": "^3.3.14",
+    "zlib": "^1.0.5"
   },
   "dependencies": {},
   "repository": {
