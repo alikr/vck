@@ -1,7 +1,7 @@
 
 /*!
  * Copyright(c) 2018 alikr
- * Version: 0.0.3
+ * Version: 0.1.0
  */
 'use strict';
 
@@ -1066,14 +1066,14 @@ Timer.prototype.stop = function () {
 	this._callback = this._delay = this._time = this._once = null;
 };
 
-function timer$1(callback) {
+function timer(callback) {
 	checkCall(callback);
 	var time = new Timer(callback, 0, Infinity);
 	time.start();
 	return time;
 }
 
-function timeout$1(callback, delay) {
+function timeout(callback, delay) {
 	checkCall(callback);
 	var time = new Timer(callback, delay, 1);
 	time.start();
@@ -1433,8 +1433,8 @@ exports.rgb = rgb;
 exports.ordinal = ordinal;
 exports.addInterval = addInterval;
 exports.removeInterval = removeInterval;
-exports.timer = timer$1;
-exports.timeout = timeout$1;
+exports.timer = timer;
+exports.timeout = timeout;
 exports.interval = interval;
 exports.domEvent = domEvent;
 exports.clickEvent = clickEvent;

@@ -1,6 +1,6 @@
 {
   "name": "vck",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Visualization Common Kit",
   "main": "dist/vck.js",
   "author": "alikr",
