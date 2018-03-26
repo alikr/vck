@@ -1,7 +1,7 @@
 
 /*!
  * Copyright(c) 2018 alikr
- * Version: 0.1.0
+ * Version: 0.1.1
  */
 'use strict';
 
@@ -1080,7 +1080,8 @@ function timeout(callback, delay) {
 	return time;
 }
 
-function interval(callback, delay, count) {
+function interval(callback, delay) {
+	var count = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Infinity;
 	var immediate = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 
 	checkCall(callback);

@@ -48,7 +48,7 @@ export function timeout(callback, delay) {
 	return time;
 }
 
-export function interval(callback, delay, count, immediate = true) {
+export function interval(callback, delay, count = Infinity, immediate = true) {
 	checkCall(callback);
 	let time = new Timer(callback, delay, count, immediate);
 	time.start();
