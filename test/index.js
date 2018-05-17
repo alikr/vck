@@ -56,44 +56,6 @@ describe('贝赛尔曲线', function() {
 	});
 });
 
-describe('vck.round', function() {
-  it('3.1415926 => 3', function() {
-    expect(vck.round(3.1415926)).equal(3);
-  });
-
-  it('3.1415926 => 3.14', function() {
-    expect(vck.round(3.1415926, 2)).equal(3.14);
-  });
-});
-
-describe('vck.num2SI', function() {
-  it('默认2位精度：1024 => 1.02KB', function() {
-    expect(vck.num2SI(1024)).equal('1.02KB');
-  });
-
-  it('3位精度：1024 => 1.024KB', function() {
-    expect(vck.num2SI(1024, 3)).equal('1.024KB');
-  });
-
-  it('800.829182 => 800.83B', function() {
-    expect(vck.num2SI(800.829182)).equal('800.83B');
-  });
-});
-
-describe('vck.num2CN', function() {
-  it('1024 => 1024', function() {
-    expect(vck.num2CN(1024)).equal('1024');
-  });
-
-  it('10024 => 1万', function() {
-    expect(vck.num2CN(10024)).equal('1万');
-  });
-
-  it('11024 => 1.1万', function() {
-    expect(vck.num2CN(11024)).equal('1.1万');
-  });
-});
-
 describe('vck.timestamp', function() {
   it('10位时间戳：1521007319598 => 1521007319', function() {
     expect(vck.timestamp(1521007319598)).equal(1521007319);

@@ -1,14 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title>vck</title>
 	<script type="text/javascript" src="../dist/vck.min.js"></script>
 </head>
+<style>
+	#list {
+		position: absolute;
+		left: 0;
+		top: 0;
+		background: #ccc;
+	}
+</style>
+
 <body>
+	<input type="text" id="text">
+	<div id="list">
+		list
+	</div>
+
+	<button id="emit-event">触发emit事件</button>
+	<button id="emit-once">触发emit-once事件</button>
+	<button id="remove-emit">解除emit事件</button>
+	<button id="remove-all">解除所有事件</button>
 </body>
-	
-	<script type="text/javascript">
-    console.log(vck.parse2Date('1521007319598'));
-	</script>
+
+<script type="text/javascript">
+	// getOffsets
+	var input = document.querySelector('#text');
+	var list = document.querySelector('#list');
+	var pop = vck.getOffsets(list, input, 'left-top');
+	list.style.left = pop.reference.left + 'px';
+	list.style.top = pop.reference.top + pop.reference.height + 'px';
+	list.style.width = pop.reference.width + 'px';
+
+	// broadcast
+	vck.broadcast.on('emit-event', function () {
+		alert('emit');
+	});
+	vck.broadcast.once('emit-once', function () {
+		alert('emit-once');
+	});
+	var emitEvent = document.querySelector('#emit-event');
+	var removeEmit = document.querySelector('#remove-emit');
+	var removeAll = document.querySelector('#remove-all');
+	var emitOnce = document.querySelector('#emit-once');
+	vck.domEvent('click', emitEvent, function () {
+		vck.broadcast.emit('emit-event');
+	});
+	vck.domEvent('click', emitOnce, function () {
+		vck.broadcast.emit('emit-once');
+	});
+	vck.domEvent('click', removeEmit, function () {
+		emitEvent.emit = !emitEvent.emit;
+		if (emitEvent.emit) {
+			vck.broadcast.off('emit-event');
+			removeEmit.innerText = '添加emit事件';
+		} else {
+			removeEmit.innerText = '解除emit事件';
+			vck.broadcast.on('emit-event', function () {
+				alert('emit');
+			});
+		}
+	});
+	vck.domEvent('click', removeAll, function () {
+		vck.broadcast.removeAllListeners();
+		emitEvent.emit = true;
+		removeEmit.innerText = '添加emit事件';
+	});
+</script>
+
 </html>

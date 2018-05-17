@@ -1,5 +1,5 @@
 /**
- * 引用 d3-color
+ * 引用 https://github.com/d3/d3-color/blob/master/src/color.js
  */
 var reI = "\\s*([+-]?\\d+)\\s*",
     reN = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\s*",
@@ -13,7 +13,7 @@ var reI = "\\s*([+-]?\\d+)\\s*",
     reHslPercent = new RegExp("^hsl\\(" + [reN, reP, reP] + "\\)$"),
     reHslaPercent = new RegExp("^hsla\\(" + [reN, reP, reP, reN] + "\\)$");
 
-export default function rgb(format) {
+export function rgb(format) {
   var m;
   format = (format + "").trim().toLowerCase();
   return (m = reHex3.exec(format)) ? (m = parseInt(m[1], 16), new Rgb((m >> 8 & 0xf) | (m >> 4 & 0x0f0), (m >> 4 & 0xf) | (m & 0xf0), ((m & 0xf) << 4) | (m & 0xf), 1)) // #f00
@@ -41,4 +41,12 @@ function Rgb(r, g, b, opacity) {
   this.g = +g;
   this.b = +b;
   this.opacity = +opacity;
+}
+
+// 转RGBA
+export function rgbaString(color, opacity = 1) {
+	if (typeof color === 'string') {
+		color = rgb(color);
+	}
+  return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + opacity + ')';
 }

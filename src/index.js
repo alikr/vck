@@ -1,84 +1,54 @@
-import rgb from './color.js';
-import {addInterval, removeInterval} from './setinterval.js';
-import {timer, timeout, interval} from './timer.js';
-import {ordinal} from './ordinal.js';
-import {domEvent, clickEvent, addEvent, delEvent, emitEvent} from './domEvent.js';
-import tick from './tick.js';
-import {round, num2SI, num2CN} from './number.js';
-import {storage, setStorage, delStorage, getStorage} from './storage.js';
-
-export {
-	rgb,
-	ordinal,
-	addInterval,
-	removeInterval,
-	timer,
-	timeout,
-	interval,
-	domEvent,
-	clickEvent,
-	addEvent,
-	delEvent,
-	emitEvent,
-	tick,
-	round,
-	num2SI,
-	num2CN,
-	storage,
-	setStorage,
-	delStorage,
-	getStorage,
-}
-
-// 默认图表颜色
-export const colors = ordinal().range(['#61A5E8','#EECB5F','#7ECF51','#9570E5','#E3935D','#E16757','#605FF0']);
-
-// 绑定页面点击事件
-if (typeof document === 'object') {
-	domEvent('DOMContentLoaded', document, function() {
-		domEvent('click', document.body,  clickEvent);
-	});
-}
-
-// 转RGBA
-export function rgbaString(color, opacity = 1) {
-	if (typeof color === 'string') {
-		color = rgb(color);
-	}
-  return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + opacity + ')';
-}
+export * from "./color.js";
+export * from './setinterval.js';
+export * from './timer.js';
+export * from './ordinal.js';
+export * from './domEvent.js';
+export * from './tick.js';
+export * from './number.js';
+export * from "./storage.js";
+export * from "./broadcast.js";
+export * from "./dom.js";
 
 // 计算控制点
-export function getBezierCtrls(p, cur = 0.3) {
-  var p1 = p[0];
-  var p2 = p[1];
-  var curveness = cur;
-  var c = [
-      (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
-      (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness
+export function getBezierCtrls(points, curveness = 0.3) {
+  let [x1, y1] = points[0];
+  let [x2, y2] = points[1];
+  return [
+      (x1 + x2) / 2 - (y1 - y2) * curveness,
+      (y1 + y2) / 2 - (x2 - x1) * curveness
   ];
-  return c;
 }
 
 // 计算时间t的2次贝赛尔曲线坐标
-export function getBezierCurve(t, p) {
-	// [[x1, y1], [x2, y2], [ctrlx, ctrly]]
-  var x = Math.pow((1 - t), 2) * p[0][0] + 2 * t * (1 - t) * p[2][0] + Math.pow(t, 2) * p[1][0];
-  var y = Math.pow((1 - t), 2) * p[0][1] + 2 * t * (1 - t) * p[2][1] + Math.pow(t, 2) * p[1][1];
+export function getBezierCurve(t, points) {
+  // [[x1, y1], [x2, y2], [ctrlx, ctrly]]
+  let t1 = 1 - t;
+  let t1_pow = t1 * t1;
+  let t_pow = t * t;
+  let [x1, y1] = points[0];
+  let [x2, y2] = points[1];
+  let [ctrlx, ctrly] = points[2];
+  let x = t1_pow * x1 + 2 * t * t1 * ctrlx + t_pow * x2;
+  let y = t1_pow * y1 + 2 * t * t1 * ctrly + t_pow * y2;
   return [x, y];
 }
 
 // 计算时间t的1次贝赛尔曲线坐标
-export function getBezierLine(t, p) {
-	// [[x1, y1], [x2, y2]]
-  var x = (1 - t) * p[0][0] + t * p[1][0];
-  var y = (1 - t) * p[0][1] + t * p[1][1];
+export function getBezierLine(t, points) {
+  // [[x1, y1], [x2, y2]]
+  let t1 = 1 - t;
+  let [x1, y1] = points[0];
+  let [x2, y2] = points[1];
+  let x = t1 * x1 + t * x2;
+  let y = t1 * y1 + t * y2;
   return [x, y];
 }
 
 // 计算2点距离
 export function dist(x1, y1, x2, y2) {
-	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  let p1 = x2 - x1;
+  let p2 = y2 - y1;
+	return Math.sqrt(p1 * p1 + p2 * p2);
 }
 
 // 转换10位时间戳

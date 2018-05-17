@@ -1,7 +1,7 @@
 
 /*!
  * Copyright(c) 2018 alikr
- * Version: 0.1.1
+ * Version: 1.0.0
  */
 'use strict';
 
@@ -15,11 +15,23 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-// 7.1.4 ToInteger
-var ceil = Math.ceil;
-var floor = Math.floor;
-var _toInteger = function (it) {
-  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+var _iterStep = function (done, value) {
+  return { value: value, done: !!done };
+};
+
+var _iterators = {};
+
+var toString = {}.toString;
+
+var _cof = function (it) {
+  return toString.call(it).slice(8, -1);
+};
+
+// fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+// eslint-disable-next-line no-prototype-builtins
+var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+  return _cof(it) == 'String' ? it.split('') : Object(it);
 };
 
 // 7.2.1 RequireObjectCoercible(argument)
@@ -28,20 +40,11 @@ var _defined = function (it) {
   return it;
 };
 
-// true  -> String#at
-// false -> String#codePointAt
-var _stringAt = function (TO_STRING) {
-  return function (that, pos) {
-    var s = String(_defined(that));
-    var i = _toInteger(pos);
-    var l = s.length;
-    var a, b;
-    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-    a = s.charCodeAt(i);
-    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-      ? TO_STRING ? s.charAt(i) : a
-      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-  };
+// to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+var _toIobject = function (it) {
+  return _iobject(_defined(it));
 };
 
 var _library = true;
@@ -232,24 +235,11 @@ var _has = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
 
-var toString = {}.toString;
-
-var _cof = function (it) {
-  return toString.call(it).slice(8, -1);
-};
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-
-// eslint-disable-next-line no-prototype-builtins
-var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
-  return _cof(it) == 'String' ? it.split('') : Object(it);
-};
-
-// to indexed object, toObject with fallback for non-array-like ES3 strings
-
-
-var _toIobject = function (it) {
-  return _iobject(_defined(it));
+// 7.1.4 ToInteger
+var ceil = Math.ceil;
+var floor = Math.floor;
+var _toInteger = function (it) {
+  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
 
 // 7.1.15 ToLength
@@ -489,6 +479,9 @@ var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORC
   if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
     _hide(proto, ITERATOR, $default);
   }
+  // Plug for library
+  _iterators[NAME] = $default;
+  _iterators[TAG] = returnThis;
   if (DEFAULT) {
     methods = {
       values: DEF_VALUES ? $default : getMethod(VALUES),
@@ -500,27 +493,6 @@ var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORC
     } else _export(_export.P + _export.F * (BUGGY || VALUES_BUG), NAME, methods);
   }
   return methods;
-};
-
-var $at = _stringAt(true);
-
-// 21.1.3.27 String.prototype[@@iterator]()
-_iterDefine(String, 'String', function (iterated) {
-  this._t = String(iterated); // target
-  this._i = 0;                // next index
-// 21.1.5.2.1 %StringIteratorPrototype%.next()
-}, function () {
-  var O = this._t;
-  var index = this._i;
-  var point;
-  if (index >= O.length) return { value: undefined, done: true };
-  point = $at(O, index);
-  this._i += point.length;
-  return { value: point, done: false };
-});
-
-var _iterStep = function (done, value) {
-  return { value: value, done: !!done };
 };
 
 // 22.1.3.4 Array.prototype.entries()
@@ -545,6 +517,9 @@ var es6_array_iterator = _iterDefine(Array, 'Array', function (iterated, kind) {
   return _iterStep(0, [index, O[index]]);
 }, 'values');
 
+// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
+_iterators.Arguments = _iterators.Array;
+
 var TO_STRING_TAG = _wks('toStringTag');
 
 var DOMIterables = ('CSSRuleList,CSSStyleDeclaration,CSSValueList,ClientRectList,DOMRectList,DOMStringList,' +
@@ -558,6 +533,200 @@ for (var i = 0; i < DOMIterables.length; i++) {
   var Collection = _global[NAME];
   var proto = Collection && Collection.prototype;
   if (proto && !proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
+  _iterators[NAME] = _iterators.Array;
+}
+
+// true  -> String#at
+// false -> String#codePointAt
+var _stringAt = function (TO_STRING) {
+  return function (that, pos) {
+    var s = String(_defined(that));
+    var i = _toInteger(pos);
+    var l = s.length;
+    var a, b;
+    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+    a = s.charCodeAt(i);
+    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+      ? TO_STRING ? s.charAt(i) : a
+      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+  };
+};
+
+var $at = _stringAt(true);
+
+// 21.1.3.27 String.prototype[@@iterator]()
+_iterDefine(String, 'String', function (iterated) {
+  this._t = String(iterated); // target
+  this._i = 0;                // next index
+// 21.1.5.2.1 %StringIteratorPrototype%.next()
+}, function () {
+  var O = this._t;
+  var index = this._i;
+  var point;
+  if (index >= O.length) return { value: undefined, done: true };
+  point = $at(O, index);
+  this._i += point.length;
+  return { value: point, done: false };
+});
+
+// getting tag from 19.1.3.6 Object.prototype.toString()
+
+var TAG$1 = _wks('toStringTag');
+// ES3 wrong here
+var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+// fallback for IE11 Script Access Denied error
+var tryGet = function (it, key) {
+  try {
+    return it[key];
+  } catch (e) { /* empty */ }
+};
+
+var _classof = function (it) {
+  var O, T, B;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+    // builtinTag case
+    : ARG ? _cof(O)
+    // ES3 arguments fallback
+    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+};
+
+var ITERATOR$1 = _wks('iterator');
+
+var core_isIterable = _core.isIterable = function (it) {
+  var O = Object(it);
+  return O[ITERATOR$1] !== undefined
+    || '@@iterator' in O
+    // eslint-disable-next-line no-prototype-builtins
+    || _iterators.hasOwnProperty(_classof(O));
+};
+
+var isIterable = core_isIterable;
+
+var isIterable$1 = createCommonjsModule(function (module) {
+module.exports = { "default": isIterable, __esModule: true };
+});
+
+unwrapExports(isIterable$1);
+
+var ITERATOR$2 = _wks('iterator');
+
+var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
+  if (it != undefined) return it[ITERATOR$2]
+    || it['@@iterator']
+    || _iterators[_classof(it)];
+};
+
+var core_getIterator = _core.getIterator = function (it) {
+  var iterFn = core_getIteratorMethod(it);
+  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
+  return _anObject(iterFn.call(it));
+};
+
+var getIterator = core_getIterator;
+
+var getIterator$1 = createCommonjsModule(function (module) {
+module.exports = { "default": getIterator, __esModule: true };
+});
+
+unwrapExports(getIterator$1);
+
+var slicedToArray = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+
+
+
+var _isIterable3 = _interopRequireDefault(isIterable$1);
+
+
+
+var _getIterator3 = _interopRequireDefault(getIterator$1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+
+    try {
+      for (var _i = (0, _getIterator3.default)(arr), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if ((0, _isIterable3.default)(Object(arr))) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+});
+
+var _slicedToArray = unwrapExports(slicedToArray);
+
+var reI = "\\s*([+-]?\\d+)\\s*",
+    reN = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\s*",
+    reP = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)%\\s*",
+    reHex3 = /^#([0-9a-f]{3})$/,
+    reHex6 = /^#([0-9a-f]{6})$/,
+    reRgbInteger = new RegExp("^rgb\\(" + [reI, reI, reI] + "\\)$"),
+    reRgbPercent = new RegExp("^rgb\\(" + [reP, reP, reP] + "\\)$"),
+    reRgbaInteger = new RegExp("^rgba\\(" + [reI, reI, reI, reN] + "\\)$"),
+    reRgbaPercent = new RegExp("^rgba\\(" + [reP, reP, reP, reN] + "\\)$");
+
+function rgb(format) {
+  var m;
+  format = (format + "").trim().toLowerCase();
+  return (m = reHex3.exec(format)) ? (m = parseInt(m[1], 16), new Rgb(m >> 8 & 0xf | m >> 4 & 0x0f0, m >> 4 & 0xf | m & 0xf0, (m & 0xf) << 4 | m & 0xf, 1)) : (m = reHex6.exec(format)) ? rgbn(parseInt(m[1], 16)) : (m = reRgbInteger.exec(format)) ? new Rgb(m[1], m[2], m[3], 1) : (m = reRgbPercent.exec(format)) ? new Rgb(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, 1) : (m = reRgbaInteger.exec(format)) ? rgba(m[1], m[2], m[3], m[4]) : (m = reRgbaPercent.exec(format)) ? rgba(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, m[4]) : named.hasOwnProperty(format) ? rgbn(named[format]) : format === "transparent" ? new Rgb(NaN, NaN, NaN, 0) : null;
+}
+
+function rgbn(n) {
+  return new Rgb(n >> 16 & 0xff, n >> 8 & 0xff, n & 0xff, 1);
+}
+
+function rgba(r, g, b, a) {
+  if (a <= 0) r = g = b = NaN;
+  return new Rgb(r, g, b, a);
+}
+
+function Rgb(r, g, b, opacity) {
+  this.r = +r;
+  this.g = +g;
+  this.b = +b;
+  this.opacity = +opacity;
+}
+
+function rgbaString(color) {
+  var opacity = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+  if (typeof color === 'string') {
+    color = rgb(color);
+  }
+  return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + opacity + ')';
 }
 
 var f$1 = _wks;
@@ -997,38 +1166,6 @@ exports.default = typeof _symbol2.default === "function" && _typeof(_iterator2.d
 
 var _typeof = unwrapExports(_typeof_1);
 
-var reI = "\\s*([+-]?\\d+)\\s*",
-    reN = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)\\s*",
-    reP = "\\s*([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)%\\s*",
-    reHex3 = /^#([0-9a-f]{3})$/,
-    reHex6 = /^#([0-9a-f]{6})$/,
-    reRgbInteger = new RegExp("^rgb\\(" + [reI, reI, reI] + "\\)$"),
-    reRgbPercent = new RegExp("^rgb\\(" + [reP, reP, reP] + "\\)$"),
-    reRgbaInteger = new RegExp("^rgba\\(" + [reI, reI, reI, reN] + "\\)$"),
-    reRgbaPercent = new RegExp("^rgba\\(" + [reP, reP, reP, reN] + "\\)$");
-
-function rgb(format) {
-  var m;
-  format = (format + "").trim().toLowerCase();
-  return (m = reHex3.exec(format)) ? (m = parseInt(m[1], 16), new Rgb(m >> 8 & 0xf | m >> 4 & 0x0f0, m >> 4 & 0xf | m & 0xf0, (m & 0xf) << 4 | m & 0xf, 1)) : (m = reHex6.exec(format)) ? rgbn(parseInt(m[1], 16)) : (m = reRgbInteger.exec(format)) ? new Rgb(m[1], m[2], m[3], 1) : (m = reRgbPercent.exec(format)) ? new Rgb(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, 1) : (m = reRgbaInteger.exec(format)) ? rgba(m[1], m[2], m[3], m[4]) : (m = reRgbaPercent.exec(format)) ? rgba(m[1] * 255 / 100, m[2] * 255 / 100, m[3] * 255 / 100, m[4]) : named.hasOwnProperty(format) ? rgbn(named[format]) : format === "transparent" ? new Rgb(NaN, NaN, NaN, 0) : null;
-}
-
-function rgbn(n) {
-  return new Rgb(n >> 16 & 0xff, n >> 8 & 0xff, n & 0xff, 1);
-}
-
-function rgba(r, g, b, a) {
-  if (a <= 0) r = g = b = NaN;
-  return new Rgb(r, g, b, a);
-}
-
-function Rgb(r, g, b, opacity) {
-  this.r = +r;
-  this.g = +g;
-  this.b = +b;
-  this.opacity = +opacity;
-}
-
 var requestFrame = (typeof window === "undefined" ? "undefined" : _typeof(window)) === 'object' && window.requestAnimationFrame ? window.requestAnimationFrame : function (f) {
 	setTimeout(f, 17);
 };
@@ -1176,6 +1313,8 @@ function findIndex(array, filter) {
 
 var slice = Array.prototype.slice;
 
+var colors = ordinal().range(['#61A5E8', '#EECB5F', '#7ECF51', '#9570E5', '#E3935D', '#E16757', '#605FF0']);
+
 function ordinal(range) {
   var map = {};
   var domain = [];
@@ -1244,6 +1383,12 @@ function clickEvent() {
 	emitEvent('click');
 }
 
+if ((typeof document === 'undefined' ? 'undefined' : _typeof(document)) === 'object') {
+	domEvent('DOMContentLoaded', document, function () {
+		domEvent('click', document.body, clickEvent);
+	});
+}
+
 var tick_id = 0;
 function tick() {
 	for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
@@ -1287,7 +1432,7 @@ function tick() {
 	return next;
 }
 
-var prefixes = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+var prefixes = ["K", "M", "G", "T", "P", "E", "Z", "Y"];
 
 function round(x, n) {
   return n ? Math.round(x * (n = Math.pow(10, n))) / n : Math.round(x);
@@ -1295,10 +1440,19 @@ function round(x, n) {
 
 function num2SI(num) {
   var fixed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+  var prefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "B";
+  var return_value = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 
   num = +num;
   if (num < 1000) {
-    return round(num, fixed) + 'B';
+    if (return_value) {
+      return round(num, fixed) + prefix;
+    }
+    return {
+      value: round(num, fixed),
+      unit: "",
+      prefix: prefix
+    };
   }
   var size = num.toLocaleString().match(/,/g);
   var index = size ? size.length : 0;
@@ -1306,17 +1460,24 @@ function num2SI(num) {
   var u = index * 3;
   var n2 = num.toString();
   var u3 = n2.slice(0, n2.length - u);
-  var decimal = n2.slice(n2.length - u, n2.length - u + fixed);
+  var decimal = n2.slice(n2.length - u, n2.length - u + fixed + 1);
   if (+decimal) {
-    u3 = +(u3 + '.' + decimal);
+    u3 = +(u3 + "." + decimal);
   }
   var m = round(u3, fixed);
-  return m + p + 'B';
+  if (return_value) {
+    return m + p + prefix;
+  }
+  return {
+    value: m,
+    unit: p,
+    prefix: prefix
+  };
 }
 
 function num2CN(num) {
   var fixed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
-  var prefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  var prefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
 
   var up = 10000;
   if (num < up) {
@@ -1326,10 +1487,10 @@ function num2CN(num) {
   var u = round(w, fixed);
   var m = round(w, 0);
   var size = String(m).length;
-  var names = ['', '十', '百', '千'];
-  var unit = '万';
+  var names = ["", "十", "百", "千"];
+  var unit = "万";
   if (size > 4) {
-    unit = '亿';
+    unit = "亿";
     u = round(m / up, fixed);
     m = round(m / up, 0);
     size = String(m).length;
@@ -1339,6 +1500,43 @@ function num2CN(num) {
   }
   var p = names[size - 1] + unit;
   return u + p;
+}
+
+function formatNumber(num, fixed) {
+  var prefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
+
+  var value = 0;
+  var unit = "";
+  function values() {
+    var _val = num2SI(num, fixed, prefix, false);
+    value = _val.value;
+    unit = _val.unit;
+    return values;
+  }
+  values.string = function () {
+    var is_string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+    return is_string ? value + unit + prefix : value;
+  };
+  values.unit = function (is_full) {
+    return is_full ? unit + prefix : unit;
+  };
+  return values();
+}
+
+function formatNumberByUnit(num, unit) {
+  var fixed = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
+
+  var index = -1;
+  var size = prefixes.length;
+  for (var i = 0; i < size; i++) {
+    if (unit === prefixes[i]) {
+      index = i;
+      break;
+    }
+  }
+  var k = Math.pow(1000, index + 1);
+  return round(num / k, fixed);
 }
 
 var storage = (typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object' && window.localStorage ? window.localStorage : false;
@@ -1364,94 +1562,307 @@ function getStorage(key) {
 	return val;
 }
 
-var colors = ordinal().range(['#61A5E8', '#EECB5F', '#7ECF51', '#9570E5', '#E3935D', '#E16757', '#605FF0']);
+function dispatch() {
+  var listeners = {};
+  return {
+    on: function on(event, fn) {
+      event = "$" + event;
+      (listeners[event] || (listeners[event] = [])).push(fn);
+    },
+    once: function once(event, fn) {
+      var eventAlias = event;
+      event = "$" + event;
+      function on() {
+        this.off(eventAlias, on);
+        fn.apply(this, arguments);
+      }
+      (listeners[event] || (listeners[event] = [])).push(on);
+    },
+    off: function off(event, fn) {
+      event = "$" + event;
+      if (!arguments.length) {
+        listeners = {};
+      } else {
+        var cbs = listeners[event];
+        if (cbs) {
+          if (!fn) {
+            listeners[event] = null;
+            delete listeners[event];
+          } else {
+            for (var i = 0, l = cbs.length; i < l; i++) {
+              var cb = cbs[i];
+              if (cb === fn || cb.fn === fn) {
+                cbs.splice(i, 1);
+                break;
+              }
+            }
+          }
+        }
+      }
+    },
+    emit: function emit(event) {
+      event = "$" + event;
+      var cbs = listeners[event];
+      if (cbs) {
+        var args = [].slice.call(arguments, 1);
+        cbs = cbs.slice();
+        for (var i = 0, l = cbs.length; i < l; i++) {
+          cbs[i].apply(this, args);
+        }
+      }
+    },
+    removeAllListeners: function removeAllListeners() {
+      for (var key in listeners) {
+        this.off(key.slice(1));
+      }
+      listeners = {};
+    }
+  };
+}
+var broadcast = dispatch();
 
-if ((typeof document === 'undefined' ? 'undefined' : _typeof(document)) === 'object') {
-	domEvent('DOMContentLoaded', document, function () {
-		domEvent('click', document.body, clickEvent);
-	});
+var root = (typeof window === "undefined" ? "undefined" : _typeof(window)) === "object" && window;
+var DEFAULTS = {
+  placement: "bottom",
+  offset: 0,
+  forceAbsolute: false
+};
+
+function getScrollParent(element) {
+  var parent = element.parentNode;
+
+  if (!parent) {
+    return element;
+  }
+
+  if (parent === root.document) {
+    if (root.document.body.scrollTop || root.document.body.scrollLeft) {
+      return root.document.body;
+    } else {
+      return root.document.documentElement;
+    }
+  }
+
+  if (["scroll", "auto"].indexOf(getStyleComputedProperty(parent, "overflow")) !== -1 || ["scroll", "auto"].indexOf(getStyleComputedProperty(parent, "overflow-x")) !== -1 || ["scroll", "auto"].indexOf(getStyleComputedProperty(parent, "overflow-y")) !== -1) {
+    return parent;
+  }
+  return getScrollParent(element.parentNode);
 }
 
-function rgbaString(color) {
-	var opacity = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+function getOffsetRectRelativeToCustomParent(element, parent, fixed) {
+  var elementRect = getBoundingClientRect(element);
+  var parentRect = getBoundingClientRect(parent);
 
-	if (typeof color === 'string') {
-		color = rgb(color);
-	}
-	return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + opacity + ')';
+  if (fixed) {
+    var scrollParent = getScrollParent(parent);
+    parentRect.top += scrollParent.scrollTop;
+    parentRect.bottom += scrollParent.scrollTop;
+    parentRect.left += scrollParent.scrollLeft;
+    parentRect.right += scrollParent.scrollLeft;
+  }
+
+  var rect = {
+    top: elementRect.top - parentRect.top,
+    left: elementRect.left - parentRect.left,
+    bottom: elementRect.top - parentRect.top + elementRect.height,
+    right: elementRect.left - parentRect.left + elementRect.width,
+    width: elementRect.width,
+    height: elementRect.height
+  };
+  return rect;
 }
 
-function getBezierCtrls(p) {
-	var cur = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.3;
-
-	var p1 = p[0];
-	var p2 = p[1];
-	var curveness = cur;
-	var c = [(p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness, (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness];
-	return c;
+function getOffsetParent(element) {
+  var offsetParent = element.offsetParent;
+  return offsetParent === root.document.body || !offsetParent ? root.document.documentElement : offsetParent;
 }
 
-function getBezierCurve(t, p) {
-	var x = Math.pow(1 - t, 2) * p[0][0] + 2 * t * (1 - t) * p[2][0] + Math.pow(t, 2) * p[1][0];
-	var y = Math.pow(1 - t, 2) * p[0][1] + 2 * t * (1 - t) * p[2][1] + Math.pow(t, 2) * p[1][1];
-	return [x, y];
+function getOuterSizes(element) {
+  var _display = element.style.display,
+      _visibility = element.style.visibility;
+  element.style.display = "block";
+  element.style.visibility = "hidden";
+  var calcWidthToForceRepaint = element.offsetWidth;
+
+  var styles = root.getComputedStyle(element);
+  var x = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+  var y = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+  var result = {
+    width: element.offsetWidth + y,
+    height: element.offsetHeight + x
+  };
+
+  element.style.display = _display;
+  element.style.visibility = _visibility;
+  return result;
 }
 
-function getBezierLine(t, p) {
-	var x = (1 - t) * p[0][0] + t * p[1][0];
-	var y = (1 - t) * p[0][1] + t * p[1][1];
-	return [x, y];
+function getStyleComputedProperty(element, property) {
+  var css = root.getComputedStyle(element, null);
+  return css[property];
+}
+
+function isFixed(element) {
+  if (element === root.document.body) {
+    return false;
+  }
+  if (getStyleComputedProperty(element, "position") === "fixed") {
+    return true;
+  }
+  return element.parentNode ? isFixed(element.parentNode) : element;
+}
+
+function getBoundingClientRect(element) {
+  var rect = element.getBoundingClientRect();
+
+  var isIE = navigator.userAgent.indexOf("MSIE") != -1;
+
+  var rectTop = isIE && element.tagName === "HTML" ? -element.scrollTop : rect.top;
+
+  return {
+    left: rect.left,
+    top: rectTop,
+    right: rect.right,
+    bottom: rect.bottom,
+    width: rect.right - rect.left,
+    height: rect.bottom - rectTop
+  };
+}
+
+function getPosition(popper, reference) {
+  var container = getOffsetParent(reference);
+
+  if (DEFAULTS.forceAbsolute) {
+    return "absolute";
+  }
+
+  var isParentFixed = isFixed(reference, container);
+  return isParentFixed ? "fixed" : "absolute";
+}
+
+function getOffsets(popper, reference, placement) {
+  placement = placement.split("-")[0];
+  var popperOffsets = {};
+  var position = getPosition(popper, reference);
+  popperOffsets.position = position;
+  var isParentFixed = popperOffsets.position === "fixed";
+
+  var referenceOffsets = getOffsetRectRelativeToCustomParent(reference, getOffsetParent(popper), isParentFixed);
+
+  var popperRect = getOuterSizes(popper);
+
+  if (["right", "left"].indexOf(placement) !== -1) {
+    popperOffsets.top = referenceOffsets.top + referenceOffsets.height / 2 - popperRect.height / 2;
+    if (placement === "left") {
+      popperOffsets.left = referenceOffsets.left - popperRect.width;
+    } else {
+      popperOffsets.left = referenceOffsets.right;
+    }
+  } else {
+    popperOffsets.left = referenceOffsets.left + referenceOffsets.width / 2 - popperRect.width / 2;
+    if (placement === "top") {
+      popperOffsets.top = referenceOffsets.top - popperRect.height;
+    } else {
+      popperOffsets.top = referenceOffsets.bottom;
+    }
+  }
+
+  popperOffsets.width = popperRect.width;
+  popperOffsets.height = popperRect.height;
+
+  return {
+    popper: popperOffsets,
+    reference: referenceOffsets
+  };
+}
+
+function isEqualDom(currentDom, otherDom) {
+  if (currentDom === document.body) return false;
+  if (currentDom === otherDom) return true;
+  return isEqualDom(currentDom.parentNode, otherDom);
+}
+
+function getBezierCtrls(points) {
+  var curveness = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.3;
+
+  var _points$ = _slicedToArray(points[0], 2),
+      x1 = _points$[0],
+      y1 = _points$[1];
+
+  var _points$2 = _slicedToArray(points[1], 2),
+      x2 = _points$2[0],
+      y2 = _points$2[1];
+
+  return [(x1 + x2) / 2 - (y1 - y2) * curveness, (y1 + y2) / 2 - (x2 - x1) * curveness];
+}
+
+function getBezierCurve(t, points) {
+  var t1 = 1 - t;
+  var t1_pow = t1 * t1;
+  var t_pow = t * t;
+
+  var _points$3 = _slicedToArray(points[0], 2),
+      x1 = _points$3[0],
+      y1 = _points$3[1];
+
+  var _points$4 = _slicedToArray(points[1], 2),
+      x2 = _points$4[0],
+      y2 = _points$4[1];
+
+  var _points$5 = _slicedToArray(points[2], 2),
+      ctrlx = _points$5[0],
+      ctrly = _points$5[1];
+
+  var x = t1_pow * x1 + 2 * t * t1 * ctrlx + t_pow * x2;
+  var y = t1_pow * y1 + 2 * t * t1 * ctrly + t_pow * y2;
+  return [x, y];
+}
+
+function getBezierLine(t, points) {
+  var t1 = 1 - t;
+
+  var _points$6 = _slicedToArray(points[0], 2),
+      x1 = _points$6[0],
+      y1 = _points$6[1];
+
+  var _points$7 = _slicedToArray(points[1], 2),
+      x2 = _points$7[0],
+      y2 = _points$7[1];
+
+  var x = t1 * x1 + t * x2;
+  var y = t1 * y1 + t * y2;
+  return [x, y];
 }
 
 function dist(x1, y1, x2, y2) {
-	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  var p1 = x2 - x1;
+  var p2 = y2 - y1;
+  return Math.sqrt(p1 * p1 + p2 * p2);
 }
 
 function timestamp(time) {
-	var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+  var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
 
-	time = time instanceof Date ? time : parse2Date(time);
-	return +Date.parse(time).toString().slice(0, size);
+  time = time instanceof Date ? time : parse2Date(time);
+  return +Date.parse(time).toString().slice(0, size);
 }
 
 function parse2Date(time) {
-	if (time instanceof Date) return time;
-	if (time === undefined) return new Date();
-	var str = typeof time === 'number' ? time : !isNaN(+time) ? +time : String(time).replace(/(\d+)-(\d+)-(\d+)\s+/g, '$1/$2/$3 ');
-	return new Date(str);
+  if (time instanceof Date) return time;
+  if (time === undefined) return new Date();
+  var str = typeof time === 'number' ? time : !isNaN(+time) ? +time : String(time).replace(/(\d+)-(\d+)-(\d+)\s+/g, '$1/$2/$3 ');
+  return new Date(str);
 }
 
 function guid(prefix) {
-	var id = 'xxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = Math.random() * 16 | 0;
-		var v = c === 'x' ? r : r & 0x3 | 0x8;
-		return v.toString(16);
-	});
-	return typeof prefix === 'string' ? prefix + '-' + id : id;
+  var id = 'xxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+  return typeof prefix === 'string' ? prefix + '-' + id : id;
 }
 
-exports.rgb = rgb;
-exports.ordinal = ordinal;
-exports.addInterval = addInterval;
-exports.removeInterval = removeInterval;
-exports.timer = timer;
-exports.timeout = timeout;
-exports.interval = interval;
-exports.domEvent = domEvent;
-exports.clickEvent = clickEvent;
-exports.addEvent = addEvent;
-exports.delEvent = delEvent;
-exports.emitEvent = emitEvent;
-exports.tick = tick;
-exports.round = round;
-exports.num2SI = num2SI;
-exports.num2CN = num2CN;
-exports.storage = storage;
-exports.setStorage = setStorage;
-exports.delStorage = delStorage;
-exports.getStorage = getStorage;
-exports.colors = colors;
-exports.rgbaString = rgbaString;
 exports.getBezierCtrls = getBezierCtrls;
 exports.getBezierCurve = getBezierCurve;
 exports.getBezierLine = getBezierLine;
@@ -1459,3 +1870,31 @@ exports.dist = dist;
 exports.timestamp = timestamp;
 exports.parse2Date = parse2Date;
 exports.guid = guid;
+exports.rgb = rgb;
+exports.rgbaString = rgbaString;
+exports.addInterval = addInterval;
+exports.removeInterval = removeInterval;
+exports.Timer = Timer;
+exports.timer = timer;
+exports.timeout = timeout;
+exports.interval = interval;
+exports.colors = colors;
+exports.ordinal = ordinal;
+exports.domEvent = domEvent;
+exports.addEvent = addEvent;
+exports.delEvent = delEvent;
+exports.emitEvent = emitEvent;
+exports.clickEvent = clickEvent;
+exports.tick = tick;
+exports.round = round;
+exports.num2SI = num2SI;
+exports.num2CN = num2CN;
+exports.formatNumber = formatNumber;
+exports.formatNumberByUnit = formatNumberByUnit;
+exports.storage = storage;
+exports.setStorage = setStorage;
+exports.delStorage = delStorage;
+exports.getStorage = getStorage;
+exports.broadcast = broadcast;
+exports.getOffsets = getOffsets;
+exports.isEqualDom = isEqualDom;

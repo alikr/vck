@@ -42,3 +42,10 @@ export function emitEvent(namespace) {
 export function clickEvent() {
 	emitEvent('click');
 }
+
+// 绑定页面点击事件
+if (typeof document === 'object') {
+	domEvent('DOMContentLoaded', document, function() {
+		domEvent('click', document.body,  clickEvent);
+	});
+}

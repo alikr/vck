@@ -1,5 +1,8 @@
 const slice = Array.prototype.slice;
 
+// 默认图表颜色
+export const colors = ordinal().range(['#61A5E8','#EECB5F','#7ECF51','#9570E5','#E3935D','#E16757','#605FF0']);
+
 export function ordinal(range) {
 	let map = {};
 	let domain = [];

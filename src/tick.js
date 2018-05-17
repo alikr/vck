@@ -1,7 +1,7 @@
 import {timer, timeout} from './timer.js';
 // 过度动画[0 - 1]
 let tick_id = 0;
-export default function tick(...args) {
+export function tick(...args) {
 	let duration = 1000;
 	// tick_id += duration;
 	function next(fun) {
